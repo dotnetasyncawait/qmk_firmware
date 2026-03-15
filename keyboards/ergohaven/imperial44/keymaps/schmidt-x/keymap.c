@@ -69,6 +69,44 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 	
 	switch (keycode) { // This will do most of the grunt work with the keycodes.
 
+		case KC_G: {
+			static bool is_g;
+			
+			if (record->event.pressed) {
+				// since only L-mods are used, make sure physically-left Shift is the one pressed
+				if (get_mods() == MOD_BIT_LSHIFT && matrix_is_on(1, 5)) {
+					del_mods(MOD_BIT_LSHIFT);
+					add_oneshot_mods(MOD_BIT_RGUI);
+					tap_code(KC_SPACE);
+					register_mods(MOD_BIT_LSHIFT);
+					is_g = false;
+				} else {
+					is_g = true;
+				}
+			}
+			
+			return is_g;
+		}
+		
+		case KC_SPC: {
+			static bool is_space;
+		
+			if (record->event.pressed) {
+				if (get_mods() & MOD_BIT_RALT && (get_mods() & ~(MOD_BIT_RALT | MOD_BIT_LSHIFT)) == 0) {
+					register_code(KC_TAB);
+					is_space = false;
+				} else {
+					is_space = true;
+				}
+			} else {
+				if (!is_space) {
+					unregister_code(KC_TAB);
+				}
+			}
+			
+			return is_space;
+		}
+
 		case ACCEL:
 			mk_move_delta += record->event.pressed ? 16 : -16;
 			return false;
@@ -239,7 +277,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
 			return;
 		
 		case HID_SET_LAYER:
-			layer_state_set((data[1] << 8) | data[2]);
+			layer_state_set(data[1] << 8 | data[2]);
 			return;
 		
 		case HID_DEFAULT:
