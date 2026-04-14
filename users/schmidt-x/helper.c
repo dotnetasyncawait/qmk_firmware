@@ -1,6 +1,7 @@
 #include "helper.h"
 #include "action_layer.h"
 #include "action_util.h"
+#include "matrix.h"
 
 bool layer_is_default(void) {
 	return !layer_state;
@@ -32,4 +33,16 @@ bool handle_2key_macro(bool is_pressed, bool *state, uint8_t mods, uint8_t keyco
 		}
 	}
 	return false;
+}
+
+bool handle_layer_clear(bool pressed, bool* is_default) {
+	if (pressed) {
+		if (get_mods() == MOD_BIT_LSHIFT && matrix_is_on(5, 5)) { // right-side L-shift
+			layer_clear();
+			*is_default = false;
+		} else {
+			*is_default = true;
+		}
+	}
+	return *is_default;
 }

@@ -45,7 +45,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 	[_MOUSE] = LAYOUT(
 		KC_ESC,  ACCEL,   KC_F3,   KC_F4,   KC_F5,   KC_VOLU,                       XXXXXXX, XXXXXXX, MS_UP,   XXXXXXX, XXXXXXX, XXXXXXX,
-		KC_LSFT, MS_ACL0, KC_F6,   KC_F7,   KC_F8,   KC_VOLD,                       XXXXXXX, MS_LEFT, MS_DOWN, MS_RGHT, XXXXXXX, KC_LSFT,
+		KC_LSFT, MS_ACL0, KC_F6,   KC_F7,   KC_F8,   KC_VOLD,                       MS_NOOP, MS_LEFT, MS_DOWN, MS_RGHT, XXXXXXX, KC_LSFT,
 		XXXXXXX, KC_MSTP, KC_MPRV, KC_MPLY, KC_MNXT, KC_MUTE, _______,     _______, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_P0,
 		                                    INSERT,  NORMAL,  MS_BTN1,     MS_BTN2, MS_BTN3, XXXXXXX
 	),
@@ -87,7 +87,17 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 			
 			return is_g;
 		}
-		
+
+		case KC_M: {
+			static bool is_m;
+			return handle_layer_clear(record->event.pressed, &is_m);
+		}
+
+		case KC_BSPC: {
+			static bool is_bspc;
+			return handle_layer_clear(record->event.pressed, &is_bspc);
+		}
+
 		case KC_SPC: {
 			static bool is_space;
 		
@@ -105,6 +115,12 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 			}
 			
 			return is_space;
+		}
+
+		case MS_NOOP: {
+			bool no_op;
+			handle_layer_clear(record->event.pressed, &no_op);
+			return false;
 		}
 
 		case ACCEL:
@@ -271,6 +287,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void raw_hid_receive(uint8_t *data, uint8_t length) {
 	uint8_t id = data[0];
 	
+	dprintf("output report: [ 0x%02X, %d, %d, %d, %d ]\n", id, data[1], data[2], data[3], data[4]);
+	
 	switch (id) {
 		case HID_AHK:
 			ahk_enabled = (bool)data[1];
@@ -289,7 +307,7 @@ void raw_hid_receive(uint8_t *data, uint8_t length) {
 			uint8_t hours = data[1], minutes = data[2], seconds = data[3];
 			bool is_pm = (bool)data[4];
 			
-			printf("hid_ping at: %02d:%02d:%02d %s\n", hours, minutes, seconds, is_pm ? "PM" : "AM");
+			dprintf("hid_ping at: %02d:%02d:%02d %s\n", hours, minutes, seconds, is_pm ? "PM" : "AM");
 
 			uint8_t response[length];
 			memset(response, 0, length);
